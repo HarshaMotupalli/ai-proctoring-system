@@ -1,8 +1,7 @@
 # AI-Based Proctoring System Using Temporal Verification
-
-<p align="center">
-  <!-- <img src="screenshots/system_architecture.png" alt="System Architecture" width="850"/> -->
-</p>
+<!-- <p align="center">
+  <b>AI-Based Proctoring System Using Temporal Verification</b>
+</p> -->
 
 <p align="center">
 An AI-powered online examination monitoring system that combines <b>Computer Vision</b>, <b>Face Recognition</b>, <b>Object Detection</b>, <b>Identity Verification</b>, and <b>Real-Time Analytics</b> to ensure secure and fair online examinations.
@@ -10,7 +9,7 @@ An AI-powered online examination monitoring system that combines <b>Computer Vis
 
 ---
 
-## 📖 Project Overview
+### 📖 Project Overview
 
 The **AI-Based Proctoring System** is an intelligent online examination monitoring platform designed to maintain academic integrity during remote examinations.
 
@@ -20,32 +19,32 @@ The project integrates **YOLOv8**, **YOLOv8-Face**, **ArcFace**, and **MediaPipe
 
 ---
 
-## 🚀 Key Features
+### 🚀 Key Features
 
-### 👤 Student Registration
+#### 👤 Student Registration
 - Register student details
 - Capture facial image
 - Generate ArcFace facial embedding
 - Store embeddings securely in the database
 
-### ✅ Identity Verification
+#### ✅ Identity Verification
 - Face visibility validation
 - Lighting condition verification
 - Student authentication before examination
 - Prevent unauthorized access
 
-### 🎥 Real-Time Exam Monitoring
+#### 🎥 Real-Time Exam Monitoring
 - Live webcam monitoring
 - WebSocket-based communication
 - Continuous AI inference
 - Real-time event logging
 
-### 🔍 Identity Matching
+#### 🔍 Identity Matching
 - Compare live face embedding with stored embedding
 - Detect impersonation attempts
 - Generate automatic warnings
 
-### 🚨 AI-Based Violation Detection
+#### 🚨 AI-Based Violation Detection
 
 The system detects:
 
@@ -55,7 +54,7 @@ The system detects:
 - 🧑 Identity Mismatch
 - 👀 Head Movement Monitoring
 
-### ⏱ Temporal Verification
+#### ⏱ Temporal Verification
 
 Instead of generating alerts immediately, the system validates suspicious activities over a predefined time threshold.
 
@@ -65,51 +64,19 @@ This helps:
 - Improve detection accuracy
 - Prevent unnecessary warnings
 
-### 📸 Evidence Generation
-
-Every confirmed violation includes:
-
-- Timestamp
-- Evidence image
-- Violation type
-- Duration
-- Risk score
-
-### 📊 Result Dashboard
-
-The invigilator dashboard provides:
-
-- Student information
-- Session summary
-- Live monitoring status
-- Violation history
-- Analytics charts
-
-
 ---
 
-# 🏗 System Architecture
+## 🏗 System Architecture
+
+The system follows the above workflow:
 
 <p align="center">
-<img src="screenshots/system_architecture.png" width="800">
+<img src="images/system-architecture.png" width="400" height="600">
 </p>
-
-The system follows the workflow below:
-
-1. Student Registration
-2. Face Embedding Generation
-3. Identity Verification
-4. Examination Starts
-5. Real-Time AI Monitoring
-6. Suspicious Behaviour Detection
-7. Temporal Verification
-8. Violation Detection
-9. Evidence Storage
-10. Dashboard & Final Report
 
 ---
 
-# 🔄 Project Workflow
+## 🔄 Project Workflow
 
 ```text
 Student Registration
@@ -147,7 +114,7 @@ Dashboard & Reports
 
 ---
 
-# ⚡ Optimized Detection Pipeline
+## ⚡ Optimized Detection Pipeline
 
 To improve performance, different AI modules execute at different intervals.
 
@@ -160,7 +127,7 @@ To improve performance, different AI modules execute at different intervals.
 
 ---
 
-# 📁 Folder Description
+## 📁 Folder Description
 
 | Folder | Description |
 |---------|-------------|
@@ -176,7 +143,7 @@ To improve performance, different AI modules execute at different intervals.
 
 ---
 
-# 🤖 Required AI Models
+## 🤖 Required AI Models
 
 Download the official models before running the project.
 
@@ -196,9 +163,9 @@ backend/models/
 
 ---
 
-# ⚙ Installation
+## ⚙ Installation
 
-## Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/HarshaMotupalli/ai-proctoring-system.git
@@ -206,19 +173,19 @@ git clone https://github.com/HarshaMotupalli/ai-proctoring-system.git
 cd ai-proctoring-system
 ```
 
-## Create Virtual Environment
+### Create Virtual Environment
 
 ```bash
 python -m venv venv
 ```
 
-### Windows
+#### Windows
 
 ```bash
 venv\Scripts\activate
 ```
 
-### Linux / macOS
+#### Linux / macOS
 
 ```bash
 source venv/bin/activate
@@ -226,7 +193,7 @@ source venv/bin/activate
 
 ---
 
-## Install Dependencies
+### Install Dependencies
 
 ```bash
 pip install -r backend/requirements.txt
@@ -234,27 +201,16 @@ pip install -r backend/requirements.txt
 
 ---
 
-# ▶ Running the Project
+## ▶ Running the Project
 
 All commands required to run the project are documented inside:
 
 ```text
 Docs/COMMANDS.md
 ```
-
-The document contains:
-
-- Environment setup
-- Backend execution
-- Frontend execution
-- Database setup
-- Model placement
-- Troubleshooting
-- Development commands
-
 ---
 
-# 🔮 Future Enhancements
+## 🔮 Future Enhancements
 
 - Eye Gaze Tracking
 - Audio Monitoring
@@ -267,7 +223,7 @@ The document contains:
 
 ---
 
-# 👨‍💻 Author
+### 👨‍💻 Author
 
 **Harsha Motupalli**
 
@@ -278,6 +234,6 @@ The document contains:
 
 ---
 
-## 📜 License
+### 📜 License
 
 This project is developed for **educational and research purposes**. Feel free to explore, learn, and build upon it with appropriate attribution.
