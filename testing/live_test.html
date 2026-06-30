@@ -1,0 +1,931 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>AI Proctoring Live Test</title>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        video {
+            border-radius: 10px;
+            border: 3px solid #333;
+            margin-top: 15px;
+        }
+
+        .panel {
+            margin-top: 20px;
+            padding: 15px;
+            width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 10px;
+            background: #1e293b;
+        }
+
+        .status-safe { color: lightgreen; }
+        .status-warning { color: orange; }
+        .status-severe { color: red; }
+        .status-terminate {
+            color: darkred;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.2; }
+        }
+
+        .banner {
+            margin-top: 15px;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .banner-warning { background: orange; color: black; }
+        .banner-severe { background: red; }
+        .banner-terminate { background: darkred; }
+
+        #countdown {
+            font-size: 22px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2> AI Proctoring Live Test</h2>
+
+#<video id="video" autoplay width="400"></video>
+<img id="videoFeed" width="400"/>
+
+<div class="panel">
+    <div id="details"></div>
+    <div id="status"></div>
+    <div id="banner"></div>
+    <div id="countdown"></div>
+</div>
+
+<audio id="alertSound">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
+
+<script>
+const video = document.getElementById("video");
+const details = document.getElementById("details");
+const statusDiv = document.getElementById("status");
+const banner = document.getElementById("banner");
+const countdownDiv = document.getElementById("countdown");
+const alertSound = document.getElementById("alertSound");
+
+let terminateCountdown = null;
+let secondsLeft = 5;
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+});
+
+const ws = new WebSocket("ws://127.0.0.1:8000/ws/proctor");
+
+ws.onopen = () => console.log("Connected to backend");
+
+ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+
+    details.innerHTML = `
+        <p><strong> Face Count:</strong> ${data.face_count}</p>
+
+        <p><strong> Looking Direction:</strong> 
+            ${data.looking_direction}
+        </p>
+
+        <p><strong> Multiple Person Occurrences:</strong> 
+            ${data.multiple_person_occurrences}
+        </p>
+
+        <p><strong> Detected Objects:</strong> 
+            ${
+                data.detected_objects && data.detected_objects.length > 0
+                    ? data.detected_objects.join(", ")
+                    : "None"
+            }
+        </p>
+    `;
+
+    updateStatus(data.status, data.reason);
+};
+
+ws.onerror = (e) => console.log("WebSocket error", e);
+
+function updateStatus(status, reason) {
+
+    banner.innerHTML = "";
+    countdownDiv.innerHTML = "";
+    clearInterval(terminateCountdown);
+
+    if (status === "SAFE") {
+        statusDiv.innerHTML = `<h3 class="status-safe"> SAFE</h3>`;
+    }
+
+    else if (status === "WARNING") {
+        statusDiv.innerHTML = `<h3 class="status-warning"> WARNING</h3>`;
+        banner.innerHTML = `<div class="banner banner-warning">
+            Please focus on your exam!
+        </div>`;
+        alertSound.play();
+    }
+
+    else if (status === "SEVERE_WARNING") {
+        statusDiv.innerHTML = `<h3 class="status-severe"> SEVERE WARNING</h3>`;
+        banner.innerHTML = `<div class="banner banner-severe">
+            Suspicious activity detected! Continued behavior may terminate exam.
+        </div>`;
+        alertSound.play();
+    }
+
+    else if (status === "TERMINATE") {
+        statusDiv.innerHTML = `<h3 class="status-terminate"> EXAM TERMINATION INITIATED</h3>`;
+        banner.innerHTML = `<div class="banner banner-terminate">
+            Exam will terminate shortly.
+        </div>`;
+
+        secondsLeft = 5;
+        countdownDiv.innerHTML = `Terminating in ${secondsLeft} seconds...`;
+
+        terminateCountdown = setInterval(() => {
+            secondsLeft--;
+            countdownDiv.innerHTML = `Terminating in ${secondsLeft} seconds...`;
+
+            if (secondsLeft <= 0) {
+                clearInterval(terminateCountdown);
+                alert("Exam Terminated");
+                ws.close();
+            }
+        }, 1000);
+
+        alertSound.play();
+    }
+}
+
+function sendFrame() {
+    if (video.readyState !== 4) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    const dataURL = canvas.toDataURL("image/jpeg", 0.7);
+
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(dataURL);
+    }
+}
+
+setInterval(sendFrame, 200);
+</script>
+
+</body>
+</html>
+
+ -->
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Proctoring Live Test</title>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h2 { margin-top: 20px; }
+
+        video {
+            border-radius: 10px;
+            border: 3px solid #333;
+            margin-top: 15px;
+        }
+
+        .panel {
+            margin-top: 20px;
+            padding: 15px;
+            width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 10px;
+            background: #1e293b;
+        }
+
+        .status-safe { color: lightgreen; }
+        .status-warning { color: orange; }
+        .status-severe { color: red; }
+        .status-terminate {
+            color: darkred;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.2; }
+        }
+
+        .banner {
+            margin-top: 15px;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .banner-warning { background: orange; color: black; }
+        .banner-severe { background: red; }
+        .banner-terminate { background: darkred; }
+
+        #countdown {
+            font-size: 20px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #terminationOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            color: red;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>AI Proctoring System</h2>
+
+<!-- ✅ USE VIDEO (not image)  -->
+<video id="video" autoplay playsinline width="420"></video>
+
+<div class="panel">
+    <div id="details"></div>
+    <div id="status"></div>
+    <div id="banner"></div>
+    <div id="countdown"></div>
+</div>
+
+<audio id="alertSound">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio> 
+
+<script>
+const video = document.getElementById("video");
+const details = document.getElementById("details");
+const statusDiv = document.getElementById("status");
+const banner = document.getElementById("banner");
+const countdownDiv = document.getElementById("countdown");
+const alertSound = document.getElementById("alertSound");
+
+let terminateCountdown = null;
+let secondsLeft = 5;
+let lastStatus = "SAFE";
+
+// ---------------- CAMERA ----------------
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+});
+
+// ---------------- WEBSOCKET ----------------
+const ws = new WebSocket("ws://127.0.0.1:8000/ws/proctor");
+
+ws.onopen = () => console.log("Connected to backend");
+
+ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+
+    details.innerHTML = `
+        <p><strong>Face Count:</strong> ${data.face_count}</p>
+        <p><strong>Looking Direction:</strong> ${data.looking_direction}</p>
+        <p><strong>Multiple Person Occurrences:</strong> ${data.multiple_person_occurrences}</p>
+        <p><strong>Detected Objects:</strong> ${
+            data.detected_objects && data.detected_objects.length > 0
+                ? data.detected_objects.join(", ")
+                : "None"
+        }</p>
+    `;
+
+    updateStatus(data.status, data.reason);
+};
+
+ws.onerror = (e) => console.log("WebSocket error", e);
+
+// ---------------- STATUS SYSTEM ----------------
+function updateStatus(status, reason) {
+
+    // Reset UI
+    banner.innerHTML = "";
+    countdownDiv.innerHTML = "";
+
+    // Stop previous countdown
+    clearInterval(terminateCountdown);
+
+    // Stop sound if not termination
+    if (status !== "TERMINATE") {
+        alertSound.pause();
+        alertSound.currentTime = 0;
+        alertSound.loop = false;
+    }
+
+    // SAFE
+    alertSound.pause();
+    alertSound.currentTime = 0;
+    alertSound.loop = false;
+    if (status === "SAFE") {
+        statusDiv.innerHTML = `<h3 class="status-safe">SAFE</h3>`;
+    }
+    
+
+    // WARNING
+    else if (status === "WARNING") {
+        statusDiv.innerHTML = `<h3 class="status-warning">WARNING</h3>`;
+        banner.innerHTML = `<div class="banner banner-warning">${reason}</div>`;
+
+        // 🔔 Beep only once when status changes
+        if (lastStatus !== "WARNING") {
+            alertSound.play();
+        }
+    }
+
+    // SEVERE WARNING
+    else if (status === "SEVERE_WARNING") {
+        statusDiv.innerHTML = `<h3 class="status-severe">SEVERE WARNING</h3>`;
+        banner.innerHTML = `<div class="banner banner-severe">${reason}</div>`;
+
+        if (lastStatus !== "SEVERE_WARNING") {
+            alertSound.play();
+        }
+    }
+
+    // TERMINATE
+    else if (status === "TERMINATE") {
+
+        statusDiv.innerHTML =
+            `<h3 class="status-terminate">EXAM TERMINATION INITIATED</h3>`;
+
+        banner.innerHTML =
+            `<div class="banner banner-terminate">${reason}</div>`;
+
+        // 🔊 Continuous alarm during countdown
+        alertSound.loop = true;
+        alertSound.play();
+
+        secondsLeft = 5;
+        countdownDiv.innerHTML = `Terminating in ${secondsLeft} seconds...`;
+
+        terminateCountdown = setInterval(() => {
+
+            secondsLeft--;
+
+            countdownDiv.innerHTML =
+                `Terminating in ${secondsLeft} seconds...`;
+
+            if (secondsLeft <= 0) {
+
+                clearInterval(terminateCountdown);
+
+                // 🔴 Stop alarm completely
+                alertSound.pause();
+                alertSound.currentTime = 0;
+                alertSound.loop = false;
+
+                // 🔴 Close WebSocket
+                ws.close();
+
+                // 🔴 Stop webcam
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // 🔴 Stop sending frames
+                clearInterval(frameInterval);
+
+                // 🔴 Lock page interaction
+                document.body.style.pointerEvents = "none";
+                document.body.style.userSelect = "none";
+
+                // 🔴 Show full screen overlay
+                document.getElementById("terminationOverlay").style.display = "flex";
+            }
+
+        }, 1000);
+    }
+
+    lastStatus = status;
+}
+
+// Lock Page
+function lockPage() {
+
+    // Stop webcam
+    const stream = video.srcObject;
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+
+    // Stop sending frames
+    clearInterval(frameInterval);
+
+    // Disable interaction
+    document.body.style.pointerEvents = "none";
+    document.body.style.userSelect = "none";
+
+    // Show overlay
+    document.getElementById("terminationOverlay").style.display = "flex";
+}
+
+// ---------------- FRAME SENDER ----------------
+function sendFrame() {
+    if (video.readyState !== 4) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    const dataURL = canvas.toDataURL("image/jpeg", 0.7);
+
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(dataURL);
+    }
+}
+
+// Faster detection
+//setInterval(sendFrame, 200);
+let frameInterval = setInterval(sendFrame, 200);
+
+</script>
+
+
+<div id="terminationOverlay">
+    PROCTORING OCCURS EXAM WAS TERMINATED
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>AI Proctoring System</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+/* ---------- REGISTRATION ---------- */
+
+#registrationBox{
+margin-top:40px;
+}
+
+input{
+padding:10px;
+margin:6px;
+border-radius:6px;
+border:none;
+width:200px;
+}
+
+button{
+padding:10px 18px;
+border:none;
+border-radius:6px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+button:disabled{
+background:gray;
+}
+
+video{
+border-radius:10px;
+border:3px solid #333;
+margin-top:15px;
+}
+
+/* ---------- DASHBOARD ---------- */
+
+#dashboard{
+width:720px;
+margin:auto;
+margin-top:20px;
+display:none;
+}
+
+.detect-row{
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-bottom:15px;
+}
+
+.detect-card{
+flex:1;
+background:rgba(255,255,255,0.08);
+padding:12px;
+border-radius:10px;
+}
+
+.detect-title{
+font-weight:bold;
+margin-bottom:6px;
+}
+
+.detect-value{
+font-size:16px;
+}
+
+/* ---------- STATUS ---------- */
+
+.safe{color:lightgreen;}
+.warn{color:orange;}
+.severe{color:red;}
+
+.terminate{
+color:red;
+animation:blink .8s infinite;
+}
+
+@keyframes blink{
+50%{opacity:0.3;}
+}
+
+/* ---------- WARNING ---------- */
+
+.banner{
+padding:12px;
+border-radius:8px;
+font-weight:bold;
+margin-top:10px;
+}
+
+.banner-warning{
+background:orange;
+color:black;
+}
+
+.banner-severe{
+background:red;
+}
+
+.banner-terminate{
+background:darkred;
+}
+
+#countdown{
+font-size:18px;
+margin-top:10px;
+}
+
+/* ---------- TERMINATION ---------- */
+
+#terminationOverlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#0f172a;
+color:red;
+display:none;
+justify-content:center;
+align-items:center;
+font-size:42px;
+font-weight:bold;
+text-align:center;
+z-index:9999;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>AI Proctoring System</h2>
+
+// ---------- REGISTRATION PAGE ---------- 
+
+<div id="registrationBox">
+
+<h3>Student Verification</h3>
+
+<input id="name" placeholder="Name"><br> <input id="regno" placeholder="Register Number"><br> <input id="college" placeholder="College"><br>
+
+<button onclick="captureFace()">Capture Face</button> <button id="startExamBtn" disabled onclick="startExam()">Start Exam</button>
+
+<div id="verifyMsg"></div>
+
+</div>
+
+//---------- VIDEO ---------- 
+
+<video id="video" autoplay playsinline width="420"></video>
+
+//---------- MONITORING DASHBOARD ---------- //
+
+<div id="dashboard">
+
+<div class="detect-row">
+
+<div class="detect-card">
+<div class="detect-title">Face Count</div>
+<div class="detect-value" id="faceBox">-</div>
+</div>
+
+<div class="detect-card">
+<div class="detect-title">Looking</div>
+<div class="detect-value" id="lookBox">CENTER</div>
+</div>
+
+<div class="detect-card">
+<div class="detect-title">Persons</div>
+<div class="detect-value" id="multiBox">0</div>
+</div>
+
+<div class="detect-card">
+<div class="detect-title">Objects</div>
+<div class="detect-value" id="objBox">None</div>
+</div>
+
+</div>
+
+<div id="status"></div>
+<div id="banner"></div>
+<div id="countdown"></div>
+
+</div>
+
+<audio id="alertSound">
+<source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
+</audio>
+
+<script>
+
+const video = document.getElementById("video");
+
+const faceBox=document.getElementById("faceBox");
+const lookBox=document.getElementById("lookBox");
+const multiBox=document.getElementById("multiBox");
+const objBox=document.getElementById("objBox");
+
+const statusDiv=document.getElementById("status");
+const banner=document.getElementById("banner");
+const countdownDiv=document.getElementById("countdown");
+const alertSound=document.getElementById("alertSound");
+
+let terminateCountdown=null;
+let secondsLeft=5;
+let lastStatus="SAFE";
+
+let registrationComplete=false;
+let examStarted=false;
+
+// ---------- CAMERA ----------
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream=>{
+video.srcObject=stream;
+});
+
+// ---------- WEBSOCKET ----------
+
+const ws=new WebSocket("ws://127.0.0.1:8000/ws/proctor");
+
+ws.onmessage=(msg)=>{
+
+const data=JSON.parse(msg.data);
+
+if(!examStarted) return;
+
+faceBox.innerText=data.face_count;
+lookBox.innerText=data.looking_direction;
+multiBox.innerText=data.multiple_person_occurrences;
+
+objBox.innerText=
+data.detected_objects && data.detected_objects.length>0
+? data.detected_objects.join(", ")
+: "None";
+
+updateStatus(data.status,data.reason);
+
+};
+
+// ---------- FACE CAPTURE ----------
+
+function captureFace(){
+
+const name=document.getElementById("name").value;
+const regno=document.getElementById("regno").value;
+const college=document.getElementById("college").value;
+
+if(!name||!regno||!college){
+alert("Fill all details");
+return;
+}
+
+const canvas=document.createElement("canvas");
+
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+
+const ctx=canvas.getContext("2d");
+ctx.drawImage(video,0,0);
+
+const frame=canvas.toDataURL("image/jpeg",0.7);
+
+ws.send(frame+"|"+name+"|"+regno+"|"+college);
+
+document.getElementById("verifyMsg").innerText="Verifying face...";
+
+registrationComplete=true;
+
+document.getElementById("startExamBtn").disabled=false;
+
+}
+
+// ---------- START EXAM ----------
+
+function startExam(){
+
+examStarted=true;
+
+document.getElementById("registrationBox").style.display="none";
+
+document.getElementById("dashboard").style.display="block";
+
+}
+
+// ---------- FRAME SENDER ----------
+
+function sendFrame(){
+
+if(!examStarted) return;
+
+if(video.readyState!==4) return;
+
+const canvas=document.createElement("canvas");
+
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+
+const ctx=canvas.getContext("2d");
+
+ctx.drawImage(video,0,0);
+
+const frame=canvas.toDataURL("image/jpeg",0.7);
+
+ws.send(frame);
+
+}
+
+setInterval(sendFrame,200);
+
+// ---------- STATUS SYSTEM ----------
+
+function updateStatus(status,reason){
+
+banner.innerHTML="";
+countdownDiv.innerHTML="";
+clearInterval(terminateCountdown);
+
+if(status!=="TERMINATE"){
+alertSound.pause();
+alertSound.currentTime=0;
+alertSound.loop=false;
+}
+
+if(status==="SAFE"){
+statusDiv.innerHTML=`<h3 class="safe">SAFE</h3>`;
+}
+
+else if(status==="WARNING"){
+
+statusDiv.innerHTML=`<h3 class="warn">WARNING</h3>`;
+banner.innerHTML=`<div class="banner banner-warning">${reason}</div>`;
+
+if(lastStatus!=="WARNING"){
+alertSound.play();
+}
+
+}
+
+else if(status==="SEVERE_WARNING"){
+
+statusDiv.innerHTML=`<h3 class="severe">SEVERE WARNING</h3>`;
+banner.innerHTML=`<div class="banner banner-severe">${reason}</div>`;
+
+alertSound.play();
+
+}
+
+else if(status==="TERMINATE"){
+
+statusDiv.innerHTML=`<h3 class="terminate">EXAM TERMINATION INITIATED</h3>`;
+banner.innerHTML=`<div class="banner banner-terminate">${reason}</div>`;
+
+alertSound.loop=true;
+alertSound.play();
+
+secondsLeft=5;
+
+countdownDiv.innerHTML=`Terminating in ${secondsLeft} seconds...`;
+
+terminateCountdown=setInterval(()=>{
+
+secondsLeft--;
+
+countdownDiv.innerHTML=`Terminating in ${secondsLeft} seconds...`;
+
+if(secondsLeft<=0){
+
+clearInterval(terminateCountdown);
+
+alertSound.pause();
+
+ws.close();
+
+video.srcObject.getTracks().forEach(track=>track.stop());
+
+document.getElementById("dashboard").style.display="none";
+
+video.style.display="none";
+
+document.getElementById("terminationOverlay").style.display="flex";
+
+}
+
+},1000);
+
+}
+
+lastStatus=status;
+
+}
+
+</script>
+
+<div id="terminationOverlay">
+PROCTORING OCCURS<br>EXAM WAS TERMINATED
+</div>
+
+</body>
+</html> -->

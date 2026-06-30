@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verification</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* CONTAINER */
+.container {
+    width: 900px;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* LEFT PANEL */
+.left {
+    flex: 1;
+    padding: 25px;
+}
+
+video {
+    width: 100%;
+    height: 250px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+/* STATUS */
+.status {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.ok { background: #d4edda; color: #155724; }
+.fail { background: #f8d7da; color: #721c24; }
+
+/* RIGHT PANEL */
+.right {
+    flex: 1;
+    padding: 25px;
+    background: #f5f7fa;
+}
+
+button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: gray;
+    color: white;
+    cursor: not-allowed;
+}
+
+button.active {
+    background: #28a745;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT -->
+    <div class="left">
+        <h2>Verification</h2>
+
+        <video id="video" autoplay></video>
+
+        <div id="faceStatus" class="status fail">Face Not Detected</div>
+        <div id="identityStatus" class="status fail">Identity Not Verified</div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+        <h3>Instructions</h3>
+        <ul>
+            <li>Face must be clearly visible</li>
+            <li>Stay centered</li>
+            <li>Ensure good lighting</li>
+            <li>No other persons allowed</li>
+        </ul>
+
+        <button id="startBtn">Start Exam</button>
+    </div>
+
+</div>
+
+<script>
+
+const video = document.getElementById("video");
+const faceStatus = document.getElementById("faceStatus");
+const identityStatus = document.getElementById("identityStatus");
+const startBtn = document.getElementById("startBtn");
+
+const user_id = localStorage.getItem("user_id");
+
+if (!user_id) {
+    alert("Please register first!");
+    window.location.href = "register.html";
+}
+
+// 🎥 START CAMERA
+navigator.mediaDevices.getUserMedia({
+    video: {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        facingMode: "user"
+    }
+})
+.then(stream => {
+    video.srcObject = stream;
+    video.onloadedmetadata = () => processFrame();
+})
+.catch(() => {
+    faceStatus.innerText = "Camera access denied";
+});
+
+
+// 🔥 TEMPORAL BUFFERS
+let faceBuffer = [];
+let identityBuffer = [];
+
+let isProcessing = false;
+let frameCount = 0;
+
+async function processFrame() {
+
+    if (isProcessing || video.videoWidth === 0) {
+        requestAnimationFrame(processFrame);
+        return;
+    }
+
+    frameCount++;
+
+    // 🔥 PROCESS ONLY EVERY 3RD FRAME (OPTIMIZATION)
+    if (frameCount % 3 !== 0) {
+        requestAnimationFrame(processFrame);
+        return;
+    }
+
+    isProcessing = true;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(async (blob) => {
+
+        try {
+
+            let formData = new FormData();
+            formData.append("image", blob, "frame.jpg");
+            formData.append("user_id", user_id);
+
+            const res = await fetch("http://127.0.0.1:8000/verify/verify", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!res.ok) {
+                isProcessing = false;
+                requestAnimationFrame(processFrame);
+                return;
+            }
+
+            const data = await res.json();
+
+            const face = Boolean(data.face_detected);
+            const identity = Boolean(data.identity);
+
+            // 🔥 STORE LAST 10 RESULTS
+            faceBuffer.push(face);
+            identityBuffer.push(identity);
+
+            if (faceBuffer.length > 10) faceBuffer.shift();
+            if (identityBuffer.length > 10) identityBuffer.shift();
+
+            // 🔥 MAJORITY DECISION
+            const faceTrue = faceBuffer.filter(x => x).length;
+            const identityTrue = identityBuffer.filter(x => x).length;
+
+            const finalFace = faceTrue >= 7;
+            const finalIdentity = identityTrue >= 7;
+
+            console.log("STABLE:", finalFace, finalIdentity);
+
+            // 🔥 UI UPDATE
+            faceStatus.innerText = finalFace ? "Face Detected" : "Face Not Detected";
+            faceStatus.className = finalFace ? "status ok" : "status fail";
+
+            identityStatus.innerText = finalIdentity ? "Identity Verified" : "Identity Not Verified";
+            identityStatus.className = finalIdentity ? "status ok" : "status fail";
+
+            // 🔥 BUTTON CONTROL
+            if (finalFace && finalIdentity) {
+                startBtn.disabled = false;
+                startBtn.classList.add("active");
+            } else {
+                startBtn.disabled = true;
+                startBtn.classList.remove("active");
+            }
+
+        } catch (err) {
+            console.log("ERROR:", err);
+        }
+
+        isProcessing = false;
+        requestAnimationFrame(processFrame);
+
+    }, "image/jpeg", 0.8);
+}
+
+
+// 🚀 START BUTTON
+startBtn.onclick = () => {
+
+    localStorage.setItem("exam_started", "true");
+
+    window.location.href = "exam.html";
+};
+
+</script>
+
+<!-- <script>
+
+const video = document.getElementById("video");
+const faceStatus = document.getElementById("faceStatus");
+const identityStatus = document.getElementById("identityStatus");
+const startBtn = document.getElementById("startBtn");
+
+const user_id = localStorage.getItem("user_id");
+
+if (!user_id) {
+    alert("Please register first!");
+    window.location.href = "register.html";
+}
+
+video.addEventListener("loadedmetadata", () => {
+    console.log("Video ready:", video.videoWidth, video.videoHeight);
+});
+
+// // CAMERA
+// navigator.mediaDevices.getUserMedia({ video: true })
+// .then(stream => video.srcObject = stream)
+// .catch(() => {
+//     faceStatus.innerText = "Camera access denied";
+// });
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+
+    video.onloadedmetadata = () => {
+        processFrame();  // 🔥 START LOOP
+    };
+});
+
+
+let isProcessing = false;
+
+async function processFrame() {
+
+    if (isProcessing) {
+        requestAnimationFrame(processFrame);
+        return;
+    }
+
+    if (video.videoWidth === 0) {
+        requestAnimationFrame(processFrame);
+        return;
+    }
+
+    isProcessing = true;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(async (blob) => {
+
+    if (!blob) {
+        isProcessing = false;
+        requestAnimationFrame(processFrame);
+        return;
+    }
+
+    try {
+        let formData = new FormData();
+        formData.append("image", blob, "frame.jpg");
+        formData.append("user_id", user_id);
+
+        const res = await fetch("http://127.0.0.1:8000/verify/verify", {
+            method: "POST",
+            body: formData
+        });
+
+        // 🔥 HANDLE BAD RESPONSE
+        if (!res.ok) {
+            console.log("Bad response:", res.status);
+            isProcessing = false;
+            requestAnimationFrame(processFrame);
+            return;
+        }
+
+        const text = await res.text();
+        console.log("RAW:", text);
+
+        if (!text) {
+            isProcessing = false;
+            requestAnimationFrame(processFrame);
+            return;
+        }
+
+        const data = JSON.parse(text);
+
+        if (!data) {
+            isProcessing = false;
+            requestAnimationFrame(processFrame);
+            return;
+        }
+
+        // ✅ SAFE VALUES
+        const face = Boolean(data.face_detected);
+        const identity = Boolean(data.identity);
+
+        console.log("UI UPDATE:", face, identity);
+
+        faceStatus.innerText = face ? "Face Detected" : "Face Not Detected";
+        faceStatus.className = face ? "status ok" : "status fail";
+
+        identityStatus.innerText = identity ? "Identity Verified" : "Identity Not Verified";
+        identityStatus.className = identity ? "status ok" : "status fail";
+
+        if (face && identity) {
+            startBtn.disabled = false;
+            startBtn.classList.add("active");
+        } else {
+            startBtn.disabled = true;
+            startBtn.classList.remove("active");
+        }
+
+    } catch (err) {
+        console.log("ERROR:", err);
+    }
+
+    isProcessing = false;
+    requestAnimationFrame(processFrame);
+
+}, "image/jpeg");
+}
+// BUTTON
+startBtn.onclick = () => {
+    alert("Exam Started");
+};
+</script> -->
+
+</body>
+</html>

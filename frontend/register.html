@@ -1,0 +1,703 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Proctoring Registration</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+
+    /* 🔥 IMPORTANT FIX */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    width: 900px;
+    max-width: 100%;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+
+    /* 🔥 FIX HEIGHT ISSUE */
+    flex-wrap: wrap;
+}
+
+.left {
+    flex: 1;
+    min-width: 300px;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px;
+}
+
+.right {
+    flex: 1;
+    min-width: 300px;
+    padding: 30px;
+    text-align: center;
+
+    /* 🔥 IMPORTANT */
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.camera-box {
+    position: relative;
+    margin-top: 10px;
+}
+
+video {
+    width: 90%;
+    border-radius: 12px;
+    border: 2px solid #eee;
+}
+
+.capture-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    width: 90%;
+    margin-top: 15px;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #28a745;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.status {
+    margin-top: 10px;
+    font-weight: 500;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="left">
+        <h1>AI Proctoring System</h1>
+        <p>Secure online examination with AI-based monitoring.</p>
+    </div>
+
+    <div class="right">
+        <h2>Register</h2>
+
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="text" id="reg" placeholder="Register Number">
+        <input type="text" id="college" placeholder="College Name">
+
+        <div class="camera-box">
+            <video id="video" autoplay></video>
+            <button class="capture-btn" onclick="capture()">Capture</button>
+        </div>
+
+        <button class="submit-btn" onclick="register()">Register</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+</div>
+
+<script>
+const video = document.getElementById("video");
+let capturedBlob = null;
+
+// Start camera
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => video.srcObject = stream);
+
+// Capture image
+function capture() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+        capturedBlob = blob;
+        document.getElementById("status").innerText = "Image Captured ✔";
+    });
+}
+
+// Register
+async function register() {
+
+    const status = document.getElementById("status");
+
+    if (!capturedBlob) {
+        status.innerText = "Please capture image first!";
+        status.style.color = "red";
+        return;
+    }
+
+    status.innerText = "Registering...";
+    status.style.color = "black";
+
+    let formData = new FormData();
+    formData.append("name", document.getElementById("name").value);
+    formData.append("reg_no", document.getElementById("reg").value);
+    formData.append("college", document.getElementById("college").value);
+    formData.append("image", capturedBlob);
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/auth/register", {
+            method: "POST",
+            body: formData
+        });
+
+        // 🔥 FIX: always read text first
+        const text = await res.text();
+        console.log("RAW RESPONSE:", text);
+
+        let data = {};
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.log("Not JSON response");
+        }
+
+        // 🔥 MAIN FIX
+        if (res.status === 200) {
+            status.innerText = data.message || "Registration successful";
+            status.style.color = "green";
+
+            // 🔥 BONUS: redirect after success
+            setTimeout(() => {
+                window.location.href = "success.html";
+            }, 1500);
+
+        } else {
+            status.innerText = data.detail || "Registration failed";
+            status.style.color = "red";
+        }
+
+    } catch (err) {
+        console.error("FETCH ERROR:", err);
+        status.innerText = "Backend not running!";
+        status.style.color = "red";
+    }
+}
+</script>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Proctoring Registration</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #2b5876, #4e4376);
+    padding: 20px;   /* 🔥 prevents cutting */
+}
+
+/* MAIN CARD */
+.container {
+    display: flex;
+    width: 950px;
+    max-height: 90vh;   /* 🔥 important */
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+/* LEFT SIDE */
+.left {
+    flex: 1;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.left h1 {
+    font-size: 30px;
+}
+
+.left p {
+    margin-top: 10px;
+    opacity: 0.8;
+}
+
+/* 🤖 ROBOT */
+.robot-box {
+    margin-top: 40px;
+}
+
+.robot-box img {
+    width: 150px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* floating animation */
+@keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+/* RIGHT SIDE */
+.right {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;   /* 🔥 enables scroll */
+}
+
+.right h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* INPUTS */
+.input-box {
+    margin-bottom: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* CAMERA */
+.camera-box {
+    margin-top: 15px;
+    text-align: center;
+}
+
+video {
+    width: 100%;
+    height: 220px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #eee;
+}
+
+.capture-btn {
+    margin-top: 10px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+#retakeBtn {
+    background: red;
+    display: none;
+}
+
+/* SUBMIT */
+.submit-btn {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #28a745;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background: #218838;
+}
+
+/* STATUS */
+.status {
+    margin-top: 10px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.right::-webkit-scrollbar {
+    width: 6px;
+}
+
+.right::-webkit-scrollbar-thumb {
+    background: #aaa;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT -->
+    <div class="left">
+        <h1>AI Proctoring System</h1>
+        <p>Smart monitoring for secure exams</p>
+
+        <div class="robot-box">
+            <!-- 🔥 REALISTIC ROBOT -->
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png">
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+
+        <h2>Register</h2>
+
+        <div class="input-box">
+            <input type="text" id="name" placeholder="Full Name">
+        </div>
+
+        <div class="input-box">
+            <input type="text" id="reg" placeholder="Register Number">
+        </div>
+
+        <div class="input-box">
+            <input type="text" id="college" placeholder="College Name">
+        </div>
+
+        <div class="camera-box">
+            <video id="video" autoplay></video>
+
+            <button class="capture-btn" onclick="capture()">Capture</button>
+            <button class="capture-btn" id="retakeBtn" onclick="retake()">Retake</button>
+        </div>
+
+        <button class="submit-btn" onclick="register()">Register</button>
+
+        <div class="status" id="status"></div>
+
+    </div>
+
+</div>
+
+<script>
+const video = document.getElementById("video");
+const status = document.getElementById("status");
+
+let capturedBlob = null;
+
+// 🎥 START CAMERA (HD + stable)
+navigator.mediaDevices.getUserMedia({
+    video: {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        facingMode: "user"
+    }
+})
+.then(stream => {
+    video.srcObject = stream;
+})
+.catch(() => {
+    status.innerText = "Camera access denied!";
+    status.style.color = "red";
+});
+
+
+// 📸 CAPTURE (IMPROVED QUALITY)
+function capture() {
+
+    if (video.videoWidth === 0) {
+        status.innerText = "Camera not ready!";
+        status.style.color = "red";
+        return;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+
+        if (!blob) {
+            status.innerText = "Capture failed!";
+            status.style.color = "red";
+            return;
+        }
+
+        capturedBlob = blob;
+
+        status.innerText = "Image Captured ✔";
+        status.style.color = "green";
+
+        document.getElementById("retakeBtn").style.display = "inline-block";
+
+    }, "image/jpeg", 0.95); // 🔥 HIGH QUALITY
+}
+
+
+// 🔁 RETAKE
+function retake() {
+    capturedBlob = null;
+
+    status.innerText = "Retake image";
+    status.style.color = "black";
+
+    document.getElementById("retakeBtn").style.display = "none";
+}
+
+
+// 🚀 REGISTER
+async function register() {
+
+    if (!capturedBlob) {
+        status.innerText = "Please capture image first!";
+        status.style.color = "red";
+        return;
+    }
+
+    const nameVal = document.getElementById("name").value.trim();
+    const regVal = document.getElementById("reg").value.trim();
+    const collegeVal = document.getElementById("college").value.trim();
+
+    if (!nameVal || !regVal || !collegeVal) {
+        status.innerText = "Fill all details!";
+        status.style.color = "red";
+        return;
+    }
+
+    status.innerText = "Registering...";
+    status.style.color = "black";
+
+    try {
+
+        let formData = new FormData();
+        formData.append("name", nameVal);
+        formData.append("reg_no", regVal);
+        formData.append("college", collegeVal);
+        formData.append("image", capturedBlob, "face.jpg");
+
+        const res = await fetch("http://127.0.0.1:8000/auth/register", {
+            method: "POST",
+            body: formData
+        });
+
+        const text = await res.text();
+        console.log("RAW RESPONSE:", text);
+
+        let data = {};
+        try { data = JSON.parse(text); } catch {}
+
+        // ✅ SUCCESS
+        if (res.ok) {
+
+            localStorage.setItem("user_id", data.user_id);
+
+            status.innerText = "Registration Successful ✅";
+            status.style.color = "green";
+
+            setTimeout(() => {
+                window.location.href = "verification.html";
+            }, 1200);
+        }
+
+        // ❌ ERROR
+        else {
+            status.innerText = data.detail || "Registration failed";
+            status.style.color = "red";
+        }
+
+    } catch (err) {
+        console.error("NETWORK ERROR:", err);
+        status.innerText = "Cannot connect to backend!";
+        status.style.color = "red";
+    }
+}
+</script>
+
+<!-- <script>
+const video = document.getElementById("video");
+const status = document.getElementById("status");
+
+let capturedBlob = null;
+
+// 🎥 Start camera
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+})
+.catch(() => {
+    status.innerText = "Camera access denied!";
+    status.style.color = "red";
+});
+
+
+// 📸 CAPTURE
+function capture() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+        capturedBlob = blob;
+
+        status.innerText = "Image Captured ✔";
+        status.style.color = "green";
+
+        document.getElementById("retakeBtn").style.display = "inline-block";
+    });
+}
+
+
+// 🔁 RETAKE
+function retake() {
+    capturedBlob = null;
+
+    status.innerText = "Retake image";
+    status.style.color = "black";
+
+    document.getElementById("retakeBtn").style.display = "none";
+}
+
+
+// 🚀 REGISTER
+async function register() {
+
+    if (!capturedBlob) {
+        status.innerText = "Please capture image first!";
+        status.style.color = "red";
+        return;
+    }
+
+    status.innerText = "Registering...";
+    status.style.color = "black";
+
+    try {
+        let formData = new FormData();
+
+        // 🔥 FIX: always fetch values correctly
+        const nameVal = document.getElementById("name").value;
+        const regVal = document.getElementById("reg").value;
+        const collegeVal = document.getElementById("college").value;
+
+        formData.append("name", nameVal);
+        formData.append("reg_no", regVal);
+        formData.append("college", collegeVal);
+        formData.append("image", capturedBlob);
+
+        const res = await fetch("http://127.0.0.1:8000/auth/register", {
+            method: "POST",
+            body: formData
+        });
+
+        // 🔥 SAFE RESPONSE
+        const text = await res.text();
+        console.log("RAW RESPONSE:", text);
+
+        let data = {};
+        try {
+            data = JSON.parse(text);
+        } catch {}
+
+        // ✅ SUCCESS
+        if (res.status === 200) {
+
+            // 🔥 STORE USER ID
+            localStorage.setItem("user_id", data.user_id);
+
+            status.innerText = "Registration Successful ✅";
+            status.style.color = "green";
+
+            setTimeout(() => {
+                window.location.href = "verification.html";
+            }, 1500);
+        }
+
+        // ❌ DUPLICATE / VALIDATION
+        else if (res.status === 400) {
+            status.innerText = data.detail || "User already exists";
+            status.style.color = "red";
+        }
+
+        // ❌ OTHER
+        else {
+            status.innerText = "Something went wrong!";
+            status.style.color = "red";
+        }
+
+    } catch (err) {
+        console.error("ERROR:", err);
+
+        // 🔥 NOW THIS WILL ONLY TRIGGER ON REAL NETWORK ERROR
+        status.innerText = "Backend not running!";
+        status.style.color = "red";
+    }
+}
+</script> -->
+
+</body>
+</html>

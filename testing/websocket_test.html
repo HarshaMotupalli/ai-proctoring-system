@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Proctor Test</title>
+</head>
+<body>
+
+<h2>AI Proctor WebSocket Test</h2>
+<video id="video" width="480" height="360" autoplay></video>
+<br>
+<button onclick="start()">Start Monitoring</button>
+
+<script>
+let ws;
+let video = document.getElementById("video");
+
+async function startCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+}
+
+function start() {
+    ws = new WebSocket("ws://127.0.0.1:8000/ws/proctor");
+
+    ws.onmessage = (event) => {
+        console.log("Server:", event.data);
+    };
+
+    ws.onopen = () => {
+        console.log("WebSocket connected");
+        sendFrames();
+    };
+}
+
+function sendFrames() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    setInterval(() => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+
+        const base64Image = canvas.toDataURL("image/jpeg");
+        ws.send(base64Image);
+
+    }, 1000); // send frame every 1 second
+}
+
+startCamera();
+</script>
+
+</body>
+</html>

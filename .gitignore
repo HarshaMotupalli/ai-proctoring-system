@@ -1,0 +1,34 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# Database
+*.db
+
+# Node
+node_modules/
+
+# VS Code
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Model Cache
+*.pt.cache
+
+# Build Files
+dist/
+build/
+
+# Temporary Files
+temp/
+tmp/

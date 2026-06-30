@@ -1,0 +1,73 @@
+# =========================================================
+# AI ONLINE EXAM PROCTORING SYSTEM
+# Complete Production Requirements
+# Python 3.10 Recommended
+# =========================================================
+
+
+# ---------------------------
+# Core Backend Framework
+# ---------------------------
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+starlette==0.36.3
+
+# ---------------------------
+# Database
+# ---------------------------
+sqlalchemy==2.0.29
+
+# ---------------------------
+# Validation & Config
+# ---------------------------
+pydantic==2.6.4
+python-dotenv==1.0.1
+
+# ---------------------------
+# Computer Vision
+# ---------------------------
+opencv-python==4.9.0.80
+numpy==1.26.4
+Pillow==10.3.0
+
+# ---------------------------
+# YOLOv8 Object Detection
+# ---------------------------
+ultralytics==8.1.30
+torch==2.2.2
+torchvision==0.17.2
+tqdm==4.66.4
+
+# ---------------------------
+# Head Pose & Face Mesh
+# ---------------------------
+mediapipe==0.10.11
+
+# ---------------------------
+# Face Recognition / ArcFace
+# ---------------------------
+onnxruntime==1.17.3
+scikit-learn==1.4.2
+
+# ---------------------------
+# Scientific / Signal Processing
+# ---------------------------
+scipy==1.12.0
+
+# ---------------------------
+# Async & Networking
+# ---------------------------
+websockets==12.0
+httptools==0.6.1
+
+# ---------------------------
+# Logging & Utilities
+# ---------------------------
+loguru==0.7.2
+
+# ---------------------------
+# Optional (Recommended for stability)
+# ---------------------------
+setuptools>=65.0.0
+wheel>=0.41.0
